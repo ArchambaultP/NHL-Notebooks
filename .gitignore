@@ -134,3 +134,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# our dataset
+ift6758/data/dataset/

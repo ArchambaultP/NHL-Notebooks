@@ -12,3 +12,5 @@ but both are still valid. You can read more about packages and modules here:
 https://docs.python.org/3/reference/import.html#regular-packages
 """
 from .question_1 import get_player_stats
+from .import_dataset import import_dataset
+from .load_entire_dataset import load_entire_dataset
