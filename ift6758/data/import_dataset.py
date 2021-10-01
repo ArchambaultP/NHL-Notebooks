@@ -13,7 +13,7 @@ YYYYTPXXXX
 """
 GAME_TYPES = {1: "preseason", 2:"regular", 3:"playoffs", 4:"allstar"}
 
-def import_dataset(year:int, game_type:int) -> list[json]:
+def import_dataset(year:int, game_type:int):
     """
     Fetches all the game data for a given year corresponding to the start of the season (2016 => 2016-2017 season) and a given game type.
     Returns a list of json objects corresponding to games for the whole season
@@ -69,7 +69,7 @@ def import_dataset(year:int, game_type:int) -> list[json]:
         json.dump(json_data, f)
     return json_data
 
-def fetch_live_game_data(game_id:str) -> list[json]:
+def fetch_live_game_data(game_id:str):
     """
     Fetches game data from the live game endpoint given a game id.
     Returns a json object corresponding to a game
