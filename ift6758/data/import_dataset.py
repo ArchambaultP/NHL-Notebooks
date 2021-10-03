@@ -1,7 +1,9 @@
 import re
 import requests
 import json
-import os
+from pathlib import Path
+from os.path import dirname, abspath
+from ift6758.ressources import local_ressource as url
 """
 Game Types:
 01 = preseason
@@ -11,65 +13,67 @@ Game Types:
 
 YYYYTPXXXX
 """
-GAME_TYPES = {1: "preseason", 2:"regular", 3:"playoffs", 4:"allstar"}
+GAME_TYPES = {"PR": "preseason", "R":"regular", "P":"playoffs", "A":"allstar"}
 
-def import_dataset(year:int, game_type:int) -> list[json]:
+def import_dataset(year:int, game_type:str, path=None, returnData=False):
     """
     Fetches all the game data for a given year corresponding to the start of the season (2016 => 2016-2017 season) and a given game type.
-    Returns a list of json objects corresponding to games for the whole season
+    The game data is then saved to a given path. If the path is omitted, the data is going to be saved at the module root 
+    Returns a list of json objects corresponding to games for the whole season when the returnData flag is set to True
     
     year: start of season
-    game_type: type of games to fetch.
+    game_type: type of games to fetch. see enum above.
+    path: path to save dataset
     """
     
-    if year < 2017: #hard coding the number of games in a regular season
-        n_games = 1230
+    if path == None:
+        root = Path(dirname(abspath(__file__)))
     else:
-        n_games = 1271
+        root = Path(path)
     
-    # create the dataset directory on this path
-    os.makedirs("dataset", exist_ok=True)
-    file_name = f"dataset/{year}_{GAME_TYPES[game_type]}.json"
-    
-    if os.path.isfile(file_name): # file exists
-        with open(file_name, "r") as f:
-            return json.load(f)
-    
-    json_data = [] # need to store json data within a top container
-    
-    if game_type in [1,2]: #preseason/regular
-        for i in range(1,n_games+1):
-            game_id = f"{year}0{game_type}{str(i).zfill(4)}"
-            json_data.append(fetch_live_game_data(game_id))
-            
-    elif game_type == 3: #playoffs
-        """
-        instead of listing gamePk manually for playoffs, fetch all the game ids on schedule and then query the game api for data
-        """
-        
-        season = f"{year}{year+1}"
-        schedule_url = f"https://statsapi.web.nhl.com/api/v1/schedule?season={season}&gameType=P"
-        
-        resp = requests.get(schedule_url)
-        data = resp.json()
-        
-        game_ids = []
-        for date in data["dates"]:
-            for game in date["games"]:
-                game_ids.append(str(game["gamePk"]))
-        
-        for gid in game_ids:
-            json_data.append(fetch_live_game_data(gid))
-        
-    else:
-        print("No data")
-        return []
-    
-    with open(file_name,"w") as f:
-        json.dump(json_data, f)
-    return json_data
+    data_dir = root / "dataset"
+    file_name = f"{year}_{GAME_TYPES[game_type]}.json"
+    file_path = data_dir / file_name
+    # checking if dataset does not exist at given path.
+    if not data_dir.exists():
+        data_dir.mkdir()
 
-def fetch_live_game_data(game_id:str) -> list[json]:
+    #checking files exist
+    if file_path.exists():
+        with file_path.open("r") as f:
+            if returnData:
+                return json.load(f)
+            else:
+                return
+
+    """
+    instead of listing gamePk manually for games, fetch all the game ids on schedule and then query the game api for data
+    """
+    
+    season = f"{year}{year+1}"
+    
+    schedule_url = f"{url.schedule_endpoint}?season={season}&gameType={game_type}"
+    print(f"fetching {schedule_url}")
+    resp = requests.get(schedule_url)
+    data = resp.json()
+    
+    game_ids = []
+    for date in data["dates"]:
+        for game in date["games"]:
+            game_ids.append(str(game["gamePk"]))
+
+    json_data = [] # need to store json data in a top container
+    for gid in game_ids:
+        data = fetch_live_game_data(gid)
+        json_data.append(data)
+    
+    with file_path.open("w") as f:
+        json.dump(json_data, f)
+        
+    if returnData:
+        return json_data
+
+def fetch_live_game_data(game_id:str):
     """
     Fetches game data from the live game endpoint given a game id.
     Returns a json object corresponding to a game
@@ -77,8 +81,7 @@ def fetch_live_game_data(game_id:str) -> list[json]:
     game_id: game ID to fetch
     """
     
-    url = "https://statsapi.web.nhl.com/api/v1/game/ID/feed/live"
-    req_url = re.sub(r'ID', game_id, url)
+    req_url = re.sub(r'ID', game_id, url.games_endpoint)
     print(f"fetching {req_url}")
     resp = requests.get(req_url)
     return resp.json()
