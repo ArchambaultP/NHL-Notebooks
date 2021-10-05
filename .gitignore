@@ -138,3 +138,5 @@ dmypy.json
 # our dataset
 ift6758/data/dataset/
 dataset/
+
+.idea
