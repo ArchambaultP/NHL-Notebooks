@@ -25,7 +25,6 @@ def import_dataset(year:int, game_type:str, path=None, returnData=False):
     game_type: type of games to fetch. see enum above.
     path: path to save dataset
     """
-    
     if path == None:
         root = Path(dirname(abspath(__file__)))
     else:
@@ -83,5 +82,10 @@ def fetch_live_game_data(game_id:str):
     
     req_url = re.sub(r'ID', game_id, url.games_endpoint)
     print(f"fetching {req_url}")
+    resp = requests.get(req_url)
+    return resp.json()
+
+def fetch_boxscore_data(game_id:str):
+    req_url = re.sub(r'ID', game_id, url.boxscore_endpoint)
     resp = requests.get(req_url)
     return resp.json()
