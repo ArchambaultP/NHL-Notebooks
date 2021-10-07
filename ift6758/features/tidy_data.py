@@ -4,6 +4,7 @@ import re
 from ift6758.ressources import local_ressource as url
 from ift6758.data import fetch_boxscore_data
 from dateutil import parser
+from datetime import timedelta
 """
 We could make a function which generalizes the extraction for given parameters 
 but long because of the conditions on the events and the values not included in the events 
@@ -17,8 +18,11 @@ def extract_data_from_json(json) :
 	"""
 	data = json
 	extracted_data = []
-	for match in data :
-		game_duration = parser.parse(match["gameData"]["datetime"]["endDateTime"]) - parser.parse(match["gameData"]["datetime"]["dateTime"])
+	for match in data :       
+		# game_duration = parser.parse(match["gameData"]["datetime"]["endDateTime"]) - parser.parse(match["gameData"]["datetime"]["dateTime"])
+		game_duration = timedelta(minutes=60)
+		if len(match['liveData']['linescore']['periods']) > 3: #there is overtime
+			game_duration += timedelta(minutes=5)
 		for i,fact in enumerate(match['liveData']['plays']['allPlays']):
 			current = {}
 			event_id = fact['result']['eventTypeId']
