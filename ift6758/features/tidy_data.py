@@ -2,9 +2,10 @@ import json
 import pandas as pd
 import re
 from ift6758.ressources import local_ressource as url
-from ift6758.data import fetch_boxscore_data
+#from ift6758.data import fetch_boxscore_data
 from dateutil import parser
 from datetime import timedelta
+
 """
 We could make a function which generalizes the extraction for given parameters 
 but long because of the conditions on the events and the values not included in the events 
@@ -18,14 +19,18 @@ def extract_data_from_json(json) :
 	"""
 	data = json
 	extracted_data = []
-	for match in data :       
-		# game_duration = parser.parse(match["gameData"]["datetime"]["endDateTime"]) - parser.parse(match["gameData"]["datetime"]["dateTime"])
+	for match in data :
+		
+		home_team = match['liveData']['linescore']['teams']['home']['team']['id']
+		away_team = match['liveData']['linescore']['teams']['away']['team']['id']
 		game_duration = timedelta(minutes=60)
+		
 		if len(match['liveData']['linescore']['periods']) > 3: #there is overtime
 			game_duration += timedelta(minutes=5)
 		for i,fact in enumerate(match['liveData']['plays']['allPlays']):
 			current = {}
 			event_id = fact['result']['eventTypeId']
+			
 			if  event_id == 'SHOT' or event_id == 'GOAL' : # only goals and shots
 				current['GamePk'] = match['gamePk']
 				current['GameDuration'] = game_duration
@@ -45,7 +50,40 @@ def extract_data_from_json(json) :
 					current['Coordinates.y'] = None
 				if event_id == 'GOAL' :
 					current['Strength'] = fact['result']['strength']['name']
+				
+			
+				try:
+					current['ShotType'] = fact['result']['secondaryType']
+				except:
+					current['ShotType'] = None
+				
+				if fact['team']['id'] == home_team:
+						current['homeAway'] = 'home'
+				else:
+						current['homeAway'] = 'away'
+				
+				
+				if current['Period'] < 5: # no shootout shots
+					try:
+						if fact['team']['id'] == home_team:
+							current['rinkSide'] = match['liveData']['linescore']['periods'][fact['about']['period']-1]['home']['rinkSide']
+						
+						else:
+							current['rinkSide'] = match['liveData']['linescore']['periods'][fact['about']['period']-1]['away']['rinkSide']
+					except:
+					    current['rinkSide'] = None
+				else:
+					try:
+						if current['Coordinates.x'] > 0: # shootout shots
+							current['rinkSide'] = 'left'
+						else:
+							current['rinkSide'] = 'right'
+					except:
+						current['rinkSide'] = None
 				extracted_data.append(current)
+			
+			
+			
 	return extracted_data 
 
 def tidy_data(extracted_data) :
@@ -56,7 +94,6 @@ def tidy_data(extracted_data) :
 	extracted_data : data extracted returned by the 'extract_data_from_json' function
 	"""
 	data_frame = pd.json_normalize(extracted_data)
-	data_frame["GameDuration"] = pd.to_timedelta(data_frame["GameDuration"])
 	return data_frame
 
 # will be userfull later to use our data foreign keys with public endpoints
@@ -65,32 +102,5 @@ def get_from_url(url) :
 		return pd.read_json(url)
 	except json.decoder.JSONDecodeError :
 		print('Import Failed : ' + url)
-
-def tidy_boxscore(boxscore_data):
-    """
-    Tidies the teams object returned from the boxscore endpoint
-    """
-    
-    def tidy_team(json_data):
-        out_dict = {
-            "TeamID":json_data["team"]["id"], 
-            "TeamName":json_data["team"]["name"],
-            "Goals":json_data["teamStats"]["teamSkaterStats"]["goals"],
-            "ShotsOnGoal":json_data["teamStats"]["teamSkaterStats"]["shots"]
-        }
-
-        return out_dict
-    
-    away_team = boxscore_data["teams"]["away"]
-    home_team = boxscore_data["teams"]["home"]
-    return {"Home":tidy_team(home_team), "Away":tidy_team(away_team)}
-    
-    
-def get_boxscore(game_id):
-    json_data = fetch_boxscore_data(game_id)
-    out_data = tidy_boxscore(json_data)
-    out_df = pd.DataFrame.from_dict(out_data)
-    
-    return out_df
 
 
