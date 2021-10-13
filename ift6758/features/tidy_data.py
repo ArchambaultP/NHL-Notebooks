@@ -44,7 +44,35 @@ def extract_data_from_json(json) :
 					current['Coordinates.x'] = None
 					current['Coordinates.y'] = None
 				if event_id == 'GOAL' :
-					current['Strength'] = fact['result']['strength']['name']
+					current['Strength'] = fact['result']['strength']['name']			
+				try:
+					current['ShotType'] = fact['result']['secondaryType']
+				except:
+					current['ShotType'] = None
+				
+				if fact['team']['id'] == home_team:
+						current['homeAway'] = 'home'
+				else:
+						current['homeAway'] = 'away'
+				
+				
+				if current['Period'] < 5: # no shootout shots
+					try:
+						if fact['team']['id'] == home_team:
+							current['rinkSide'] = match['liveData']['linescore']['periods'][fact['about']['period']-1]['home']['rinkSide']
+						
+						else:
+							current['rinkSide'] = match['liveData']['linescore']['periods'][fact['about']['period']-1]['away']['rinkSide']
+					except:
+					    current['rinkSide'] = None
+				else:
+					try:
+						if current['Coordinates.x'] > 0: # shootout shots
+							current['rinkSide'] = 'left'
+						else:
+							current['rinkSide'] = 'right'
+					except:
+						current['rinkSide'] = None
 				extracted_data.append(current)
 	return extracted_data 
 
@@ -92,5 +120,3 @@ def get_boxscore(game_id):
     out_df = pd.DataFrame.from_dict(out_data)
     
     return out_df
-
-
