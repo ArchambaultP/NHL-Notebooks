@@ -140,3 +140,6 @@ ift6758/data/dataset/
 dataset/
 
 .idea
+
+# Plots
+*.png
