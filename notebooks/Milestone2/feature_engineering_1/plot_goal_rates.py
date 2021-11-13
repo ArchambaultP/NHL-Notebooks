@@ -19,8 +19,11 @@ def __plot_goal_rates_per_angle(dataset: DataFrame):
 
 
 def __plot_goal_rates(dataset: DataFrame, bin_width: int, col: str, feature_name: str):
-    max_distance = np.amax(dataset[col].to_numpy())
-    bins = range(0, int(max_distance + bin_width), bin_width)
+    values = dataset[col].to_numpy()
+    max_value = np.amax(values)
+    min_value = np.amin(values)
+    rounded_min_value = int(np.floor(min_value))
+    bins = range(rounded_min_value - (abs(rounded_min_value) % bin_width), int(max_value + bin_width), bin_width)
 
     goals = dataset[dataset['isGoal'] == 1]
     goal_hist, goal_bin_edges = np.histogram(goals[col], bins=bins)
