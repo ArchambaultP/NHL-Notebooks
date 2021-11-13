@@ -17,3 +17,5 @@ dependencies:
   - ipywidgets
   - jupyterlab>=3.0.0
   - ipdb
+  - comet_ml::comet_ml
+  - conda-forge::python-dotenv

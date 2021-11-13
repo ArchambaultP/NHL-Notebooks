@@ -1,3 +1,4 @@
+from comet_ml import Experiment, API
 import pandas as pd
 from ift6758.data import import_dataset
 from ift6758.features import tidy_data as td
@@ -11,7 +12,6 @@ def main():
     training_dataset = get_training_dataset()
     plot_goal_rates_per_distances_and_angles(training_dataset)
     plot_goal_counts_binned_by_distance(training_dataset)
-    
     plot_logistic_q3(training_dataset)
     return
 
@@ -30,18 +30,40 @@ def get_training_dataset() -> pd.DataFrame:
 def plot_logistic_q3(data):
     Y = data['isGoal']
 
+    params = {'C':[0.001,0.01,0.1,1,5,10,20,50,100]}
+
     X1 = data['goalDist']
-    lr1 = LogisticRegression()
-    lr1 = Model(lr1, X1, Y, name="Model 1")
+    lr1 = LogisticRegression(**params)
+    lr1 = Model(
+        predictor=lr1,
+        params=params, 
+        X=X1, 
+        Y=Y,
+         name="Model 1"
+         )
+    lr1.create_experiment('Q3_Model1.pkl')
 
     X2 = data['angle']
-    lr2 = LogisticRegression()
-    lr2 = Model(lr2, X2, Y, name="Model 2")
+    lr2 = LogisticRegression(**params)
+    lr2 = Model(
+        predictor=lr2,
+        params=params, 
+        X=X2, 
+        Y=Y,
+         name="Model 2"
+         )
+    lr2.fit()
 
     X3 = data[['goalDist', 'angle']]
-    lr3 = LogisticRegression()
-    lr3 = Model(lr3, X3, Y, name="Model 3")
-
+    lr3 = LogisticRegression(**params)
+    lr3 = Model(
+        predictor=lr3,
+        params=params, 
+        X=X3, 
+        Y=Y,
+         name="Model 3"
+         )
+    lr3.fit()
     plot = Plots([lr1, lr2, lr3])
     plot.plot.show()
     return
