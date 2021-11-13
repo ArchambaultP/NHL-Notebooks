@@ -232,5 +232,6 @@ def tidy_playbyplay_data(json):
 
 	df['isGoal'] = (df['EventTypeId'] == 'GOAL') * 1
 	df['EmptyNet'] = (df['EmptyNet']) * 1
+	df.loc[df['Coordinates.y'] < 0, 'angle'] *= -1
 
 	return df[['Coordinates.x', 'Coordinates.y', 'angle', 'goalDist', 'isGoal', 'EmptyNet']]
