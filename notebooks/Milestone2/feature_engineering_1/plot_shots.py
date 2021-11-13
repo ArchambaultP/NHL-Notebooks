@@ -15,6 +15,7 @@ def __plot_shot_counts_binned_by_distance(dataset: DataFrame):
     sns.histplot(dataset[['isGoal', 'goalDist']], x='goalDist', hue='isGoal')
     title = 'Shot Count per Distance'
     plt.title(title)
+    plt.ylabel('Shot Count')
     plt.xlabel('Shot Distance')
     save_plot(title)
     plt.show()
@@ -24,6 +25,7 @@ def __plot_shot_counts_binned_by_angle(dataset: DataFrame):
     sns.histplot(dataset[['isGoal', 'angle']], x='angle', hue='isGoal')
     title = 'Shot Count per Angle'
     plt.title(title)
+    plt.ylabel('Shot Count')
     plt.xlabel('Shot Angle')
     save_plot(title)
     plt.show()

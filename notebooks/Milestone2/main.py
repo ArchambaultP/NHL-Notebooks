@@ -3,7 +3,7 @@ import pandas as pd
 from ift6758.data import import_dataset
 from ift6758.features import tidy_data as td
 from notebooks.Milestone2.feature_engineering_1 import plot_shots_per_distances_and_angles, \
-    plot_goal_rates_per_distances_and_angles
+    plot_goal_rates_per_distances_and_angles, plot_goal_counts_binned_by_distance
 
 
 def main():
@@ -12,6 +12,7 @@ def main():
     # Feature Engineering 1
     plot_shots_per_distances_and_angles(training_dataset)
     plot_goal_rates_per_distances_and_angles(training_dataset)
+    plot_goal_counts_binned_by_distance(training_dataset)
 
 
 def get_training_dataset() -> pd.DataFrame:
