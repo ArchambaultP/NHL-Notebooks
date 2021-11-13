@@ -59,14 +59,8 @@ class Model():
         exp = Experiment(api_key=os.getenv('COMET_ML_KEY'),
                 workspace="charlescol",
                 project_name="milestone-2")
-
-        clf = GridSearchCV(self.predictor,
-                    param_grid=self.params,
-                    cv=10,
-                    n_jobs=-1)
-
-        clf.fit(self.X_train, self.Y_train)
-        self.predictor = clf.best_estimator_
+        
+        self.fit()
 
         Y_hat = self.predictor.predict(self.X_val)
         
