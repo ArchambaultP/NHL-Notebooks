@@ -235,3 +235,206 @@ def tidy_playbyplay_data(json):
 	df.loc[df['Coordinates.y'] < 0, 'angle'] *= -1
 
 	return df[['Coordinates.x', 'Coordinates.y', 'angle', 'goalDist', 'isGoal', 'EmptyNet']]
+
+def tidy_allevents(json):
+        
+    data = json
+    extracted_data = []
+    for match in data :       
+            previous = {}
+            previous['GamePk'] = None
+            previous['Period'] = None
+            
+            start_pp_home = 0
+            start_pp_away = 0
+            away_pp = []
+            home_pp = []
+
+            penalty = 0
+            
+            home_team_id = int(match['gameData']['teams']['home']['id'])
+            away_team_id = int(match['gameData']['teams']['away']['id'])
+            
+            for i,fact in enumerate(match['liveData']['plays']['allPlays']):
+                
+                current = {}
+                event_id = fact['result']['eventTypeId']
+                current['GamePk'] = match['gamePk']
+                current['EventTypeId'] = event_id
+                current['DateTime'] = fact['about']['dateTime']
+                current['Period'] = fact['about']['period']
+                
+                PeriodTime = fact['about']['periodTime']
+                m, s = PeriodTime.split(':')               
+                current['TotalSeconds'] = int(int(current['Period'])-1)*1200 + int(m) * 60 + int(s)
+                
+                try:
+                    current['Coordinates.x'] = fact['coordinates']['x']
+                    current['Coordinates.y'] = fact['coordinates']['y']
+                except Exception as e:
+                    current['Coordinates.x'] = 0
+                    current['Coordinates.y'] = 0
+                
+                try:
+                    current['team'] = fact['team']['id']
+                except Exception as e:
+                    current['team'] = ""
+                
+                # BONUS PART
+                
+                h_timer = 0
+                a_timer = 0
+                
+                for hpp in home_pp:
+                    if len(home_pp) > 0:
+                        h_timer = hpp[1] - (current['TotalSeconds']-hpp[2])
+                        current['h_timer']=hpp[1]
+                        
+                for hpp in home_pp:
+                    if len(home_pp) > 0:
+                        if h_timer <= 0:
+                            home_pp.remove(hpp)
+                
+                if len(home_pp) == 0:
+                    start_pp_home = current['TotalSeconds']
+                
+                
+                for app in away_pp:
+                    
+                    if len(away_pp) > 0:
+                        a_timer = app[1] - (current['TotalSeconds']-app[2])
+                        current['a_timer']=app[1]
+                        
+                for app in away_pp:
+                    if len(away_pp) > 0:
+                        if a_timer <= 0:
+                            away_pp.remove(app)
+                
+                if len(away_pp) == 0:
+                    start_pp_away = current['TotalSeconds']
+
+
+                n_home_players = 5 - len(away_pp.copy())
+                n_away_players = 5 - len(home_pp.copy())
+                
+                try:
+                    if fact['team']['id'] == home_team_id:
+                        
+                        current['TimeSincePP'] = current['TotalSeconds'] - start_pp_home
+                        
+                        if (event_id == 'GOAL'):
+                            for hpp in home_pp:
+                                if (hpp[1]>0) and (hpp[0]=='minor'):
+                                    home_pp.remove(hpp)
+                                    break
+                                if (hpp[1]>120) and (hpp[0]=='db_minor'):
+                                    hpp[1]=hpp[1]-120
+                                    break
+                                if (hpp[1]<=120) and (hpp[0]=='db_minor'):
+                                    home_pp.remove(hpp)
+                                    break   
+                        current['FriendPlayers'] = n_home_players
+                        current['OpposingPlayers'] = n_away_players                       
+
+                    else:
+                        
+                        current['TimeSincePP'] = current['TotalSeconds'] - start_pp_away
+                        
+                        if (event_id == 'GOAL'):
+                            for app in away_pp:
+                                if (app[1]>0) and (app[0]=='minor'):
+                                    away_pp.remove(app)
+                                    break
+                                if (app[1]>120) and (app[0]=='db_minor'):
+                                    app[1]=app[1]-120
+                                    break
+                                if (app[1]<=120) and (app[0]=='db_minor'):
+                                    away_pp.remove(app)
+                                    break                 
+                        current['FriendPlayers'] = str(n_away_players)
+                        current['OpposingPlayers'] = str(n_home_players)
+
+                except Exception as e:
+                    current['TimeSincePP'] = 0
+                    current['FriendPlayers'] = 5
+                    current['OpposingPlayers'] = 5
+                
+
+                if current['EventTypeId'] == 'PENALTY':
+                    
+                    if fact['result']['penaltyMinutes'] == 2:
+                        penalty = 120
+                        type = 'minor'
+                    if fact['result']['penaltyMinutes'] == 4:
+                        penalty = 240
+                        type = 'db_minor'
+                    if fact['result']['penaltyMinutes'] == 5:
+                        penalty = 300    
+                        type = 'major'
+                        
+                    if fact['team']['id'] == home_team_id:
+                        away_pp.append([type,penalty,current['TotalSeconds']])
+                        
+                    else:  
+                        home_pp.append([type,penalty,current['TotalSeconds']])
+                        
+ 
+                # PREVIOUS PLAY
+
+                
+                if (current['GamePk'] == previous['GamePk']) and (current['Period'] == previous['Period']):
+                        current['Last_event_type'] = previous['EventTypeId']
+                        current['Last_coordinates.x'] = previous['Coordinates.x']
+                        current['Last_coordinates.y'] = previous['Coordinates.y']
+                        current['Time_last_event'] = int(current['TotalSeconds']-previous['TotalSeconds'])
+                        current['Distance_last_event'] = ( (current['Coordinates.x']-current['Last_coordinates.x'])**2 +                                                          (                                 current['Coordinates.y']-current['Last_coordinates.y'])**2 )**0.5
+                        
+                        if (current['Last_event_type'] == 'SHOT') and (current['team']==previous['team']):
+                            current['Rebound'] = True
+                        else:
+                            current['Rebound'] = False
+                        try:
+                            current['Speed'] = round(current['Distance_last_event']/current['Time_last_event'],2)
+                        except Exception as e:
+                            current['Speed'] = 0
+                else:        
+                        current['Last_event_type'] = None
+                        current['Last_coordinates.x'] = 0
+                        current['Last_coordinates.y'] = 0
+                        current['Time_last_event'] = 0
+                        current['Distance_last_event'] = 0
+                        current['Rebound'] = False
+                        current['Speed'] = 0       
+
+                
+                
+                
+                extracted_data.append(current)                           
+                previous = current.copy() 
+                
+                
+    data = pd.DataFrame(extracted_data)
+    data = data[['GamePk','EventTypeId','DateTime','TotalSeconds','Last_event_type','Last_coordinates.x',
+                                      'Last_coordinates.y','Time_last_event','Distance_last_event','Rebound','Speed', 'TimeSincePP', 'FriendPlayers', 'OpposingPlayers' ]]
+    
+    return data
+
+def tidy2_playbyplay_data(json, df):
+
+        new_df = df[['GamePk', 'DateTime', 'EventTypeId', 'Period', 'Coordinates.x', 'Coordinates.y', 'goalDist', 'angle', 'ShotType', 'isGoal' ,'EmptyNet']].copy() 
+        new_df = new_df.loc[:,~new_df.columns.duplicated()]
+        df_all = tidy_allevents(json)
+              
+        new_df = pd.merge(new_df,df_all,on=['GamePk','EventTypeId','DateTime'],how='left')
+        
+        new_df['Change_angle'] = pd.DataFrame(np.zeros((new_df.shape[0],)))
+        
+        
+        for i in range(new_df.shape[0]):
+            if new_df.iloc[i,new_df.columns.get_loc('Rebound')]==True:
+                new_df.iloc[i,new_df.columns.get_loc('Change_angle')] = round(new_df.iloc[i,new_df.columns.get_loc('angle')] - new_df.iloc[i-1,new_df.columns.get_loc('angle')],2) 
+        
+        new_df = new_df.drop(columns=['EventTypeId','DateTime'])
+        
+        
+        return new_df
