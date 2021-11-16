@@ -1,7 +1,9 @@
 import comet_ml
-import pandas as pd
+from pandas import DataFrame
+
 from ift6758.data import import_dataset
 from ift6758.features import tidy_data as td
+from notebooks.Milestone2.baseline_models import evaluate_base_logistic_regression
 from notebooks.Milestone2.feature_engineering_1 import plot_shots_per_distances_and_angles, \
     plot_goal_rates_per_distances_and_angles, plot_goal_counts_binned_by_distance
 from sklearn.linear_model import LogisticRegression
@@ -17,13 +19,14 @@ def main():
     plot_goal_counts_binned_by_distance(training_dataset)
 
     # Baseline Models
-    plot_logistic_q3(training_dataset)
+    base_logistic_regression = evaluate_base_logistic_regression(training_dataset)
+    plot_logistic_q3(training_dataset, base_logistic_regression)
     return
 
 
-def get_training_dataset() -> pd.DataFrame:
+def get_training_dataset() -> DataFrame:
     train_split_seasons = [2015, 2016, 2017, 2018]
-    training_dataset = pd.DataFrame()
+    training_dataset = DataFrame()
     for s in train_split_seasons:
         raw_data = import_dataset(s, "P", returnData=True)
         pbp_data = td.get_playbyplay_data(raw_data)
@@ -33,21 +36,10 @@ def get_training_dataset() -> pd.DataFrame:
     return training_dataset.reset_index()
 
 
-def plot_logistic_q3(data):
+def plot_logistic_q3(data: DataFrame, first_logistic_regression: Model):
     Y = data['isGoal']
 
     params = {'C': [0.001, 0.01, 0.1, 1, 5, 10, 20, 50, 100]}
-
-    X1 = data['goalDist']
-    lr1 = LogisticRegression(**params)
-    lr1 = Model(
-        predictor=lr1,
-        params=params,
-        X=X1,
-        Y=Y,
-        name="Model 1"
-    )
-    lr1.create_experiment('Q3_Model1.pkl')
 
     X2 = data['angle']
     lr2 = LogisticRegression(**params)
@@ -70,7 +62,7 @@ def plot_logistic_q3(data):
         name="Model 3"
     )
     lr3.fit()
-    plot = Plots([lr1, lr2, lr3])
+    plot = Plots([first_logistic_regression, lr2, lr3])
     plot.plot.show()
     return
 
