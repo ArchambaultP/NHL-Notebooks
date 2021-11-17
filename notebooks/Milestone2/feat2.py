@@ -1,5 +1,3 @@
-import sys
-sys.path.append('../../')
 from ift6758.features import tidy_data as td
 import pandas as pd
 from ift6758.data import import_dataset
@@ -22,13 +20,8 @@ def get_training_dataset() -> pd.DataFrame:
             training_dataset = training_dataset.append(pdp2_tidied)
             training_dataset.reset_index(drop=True, inplace=True)
     
-    subset = training_dataset[training_dataset['GamePk'] == 2017021065]
     training_dataset = training_dataset.drop(columns=['GamePk'])
-    subset = subset.drop(columns=['GamePk'])
-    
-    return  training_dataset, subset
+        
+    return  training_dataset
 
-training_dataset, subset = get_training_dataset()
-
-save_set.save_set('wpg_v_wsh_2017021065.csv', subset)
-save_set.save_set('training_set.csv', training_dataset)
+training_dataset = get_training_dataset()
