@@ -1,3 +1,5 @@
+from typing import List
+
 from comet_ml import Experiment
 import numpy as np
 import os
@@ -52,7 +54,7 @@ class Model:
         Y_hat = self.predictor.predict_proba(self.X_val)
         return Y_hat[:, -1]
 
-    def create_experiment(self, file_path):
+    def create_experiment(self, file_path, tags: List[str] = None):
 
         if hasattr(self, 'exp'):
             return self.exp
@@ -81,6 +83,12 @@ class Model:
         exp.log_parameters(self.params)
         exp.log_metrics(metrics)
         exp.log_confusion_matrix(matrix=conf_matrix)
+
+        if tags is None:
+            tags = []
+        if self.Name is not None:
+            tags = tags + [self.Name]
+        exp.add_tags(tags)
 
         pickle.dump(self.predictor, open(file_path, 'wb'))
         exp.log_model(self.Name, file_path)
