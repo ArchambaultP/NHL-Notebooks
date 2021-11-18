@@ -1,11 +1,10 @@
-from os.path import dirname, abspath
 from pathlib import Path
 
 from matplotlib import pyplot as plt
 
 
-def save_plot(file_name: str):
-    root = Path(dirname(abspath(__file__)))
+def save_plot(file_name: str, directory: str):
+    root = Path(directory)
     data_dir = root / "plots"
     if not data_dir.exists():
         data_dir.mkdir()
