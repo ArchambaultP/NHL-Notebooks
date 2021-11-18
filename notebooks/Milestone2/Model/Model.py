@@ -34,6 +34,9 @@ class Model:
         self.Y_val = Y_val
 
     def fit(self):
+        self.predictor.fit(self.X_train, self.Y_train)
+
+    def grid_search_fit(self):
         clf = GridSearchCV(self.predictor,
                            param_grid=self.params,
                            cv=10,
@@ -48,7 +51,7 @@ class Model:
         accuracy = 1 - (n_errors / Y_hat.shape[0])
         return accuracy
 
-    def prob_goal(self):
+    def goal_probability(self):
         """ Returns the probability that a shot was a goal, Aligned with self.X_val
         """
         Y_hat = self.predictor.predict_proba(self.X_val)
@@ -62,8 +65,6 @@ class Model:
         exp = Experiment(api_key=os.getenv('COMET_ML_KEY'),
                          workspace="charlescol",
                          project_name="milestone-2")
-
-        self.fit()
 
         Y_hat = self.predictor.predict(self.X_val)
 

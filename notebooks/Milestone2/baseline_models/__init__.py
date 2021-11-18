@@ -1,1 +1,1 @@
-from .evaluate_base_logistic_regression import evaluate_base_logistic_regression
+from .evaluate_logistic_regressions import evaluate_logistic_classifiers

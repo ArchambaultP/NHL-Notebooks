@@ -1,8 +1,10 @@
+from os.path import dirname, abspath
+
 import numpy as np
 from matplotlib import pyplot as plt
 from pandas import DataFrame
 
-from notebooks.Milestone2.feature_engineering_1.save_plot import save_plot
+from notebooks.Milestone2.common.save_plot import save_plot
 
 
 def plot_goal_rates_per_distances_and_angles(dataset: DataFrame):
@@ -38,5 +40,5 @@ def __plot_goal_rates(dataset: DataFrame, bin_width: int, col: str, feature_name
     plt.title(title)
     plt.ylabel('Goal Rates')
     plt.xlabel(f'Shot {feature_name}')
-    save_plot(title)
+    save_plot(title, dirname(abspath(__file__)))
     plt.show()

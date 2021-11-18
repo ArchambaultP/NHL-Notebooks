@@ -1,8 +1,10 @@
+from os.path import dirname, abspath
+
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pandas import DataFrame
 
-from notebooks.Milestone2.feature_engineering_1.save_plot import save_plot
+from notebooks.Milestone2.common.save_plot import save_plot
 
 
 def plot_goal_counts_binned_by_distance(dataset: DataFrame):
@@ -12,5 +14,5 @@ def plot_goal_counts_binned_by_distance(dataset: DataFrame):
     plt.title(title)
     plt.ylabel('Goal Count')
     plt.xlabel('Shot Distance')
-    save_plot(title)
+    save_plot(title, dirname(abspath(__file__)))
     plt.show()

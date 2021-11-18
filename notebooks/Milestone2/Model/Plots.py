@@ -4,16 +4,23 @@ from matplotlib.ticker import PercentFormatter
 from sklearn.metrics import roc_curve, auc
 import numpy as np
 
+from notebooks.Milestone2.common.save_plot import save_plot
+
 
 class Plots:
     def __init__(self, models: list) -> None:
         self.models = models
 
-        plt = self.make_roc_plot()
-        plt = self.make_goal_rate_plot()
-        plt = self.make_cumul_perc_goal_plot()
-        plt = self.make_reliability_plot()
-        self.plot = plt
+    def save_and_show_plots(self, base_file_name: str, directory: str):
+        self.make_roc_plot()
+        save_plot(f'{base_file_name} ROC', directory)
+        self.make_goal_rate_plot()
+        save_plot(f'{base_file_name} Goal Rates', directory)
+        self.make_cumul_perc_goal_plot()
+        save_plot(f'{base_file_name} Cumulative Percentage Of Goals', directory)
+        self.make_reliability_plot()
+        save_plot(f'{base_file_name} Reliability', directory)
+        plt.show()
 
     def make_roc_plot(self):  # to plot Q3 figure a
         plt.figure()
@@ -23,24 +30,19 @@ class Plots:
             fpr = {}
             tpr = {}
             curve_auc = {}
-            Y_hat = model.prob_goal()
+            Y_hat = model.goal_probability()
             Y_val = model.Y_val
             fpr["pred"], tpr["pred"], _ = roc_curve(Y_val, Y_hat, pos_label=1)
             curve_auc["pred"] = auc(fpr["pred"], tpr["pred"])
             plt.plot(fpr["pred"], tpr["pred"], lw=lw,
                      label=f"ROC curve (area = %0.2f) for {model.Name}" % curve_auc["pred"])
 
-        Y_baseline = (np.random.uniform(size=self.models[0].Y_val.shape) >= 0.5) * 1
-        fpr["baseline"], tpr["baseline"], _ = roc_curve(self.models[0].Y_val, Y_baseline, pos_label=1)
-        curve_auc["baseline"] = auc(fpr["baseline"], tpr["baseline"])
-        plt.plot(fpr["baseline"], tpr["baseline"], color="navy", lw=lw, linestyle="--",
-                 label=f"ROC curve (area = %0.2f) for Random Baseline" % curve_auc["baseline"])
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
         plt.title("Receiver operating characteristic AUC")
-        plt.legend(loc="lower right")
+        plt.legend()
         return plt
 
     def make_goal_rate_plot(self):  # to plot Q3 figure b
@@ -59,7 +61,7 @@ class Plots:
 
         for model in self.models:
             out = []
-            Y_hat = model.prob_goal()
+            Y_hat = model.goal_probability()
             for p in percentiles:
                 perc = np.percentile(Y_hat, p)
                 n_goal_perc = goal_rate(Y_hat, model.Y_val, perc)
@@ -73,7 +75,7 @@ class Plots:
         plt.xlabel("Shot Probability Model Percentile")
         plt.ylabel("Goal Rate %")
         plt.title("Goal Rate")
-        plt.legend(loc="lower right")
+        plt.legend()
         plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
         plt.gca().xaxis.set_major_formatter(PercentFormatter(100))
         return plt
@@ -101,7 +103,7 @@ class Plots:
     def make_reliability_plot(self):
         disp = None
         for model in self.models:
-            Y_hat = model.prob_goal()
+            Y_hat = model.goal_probability()
             Y_val = model.Y_val
             if disp:
                 disp = CalibrationDisplay.from_predictions(Y_val, Y_hat, strategy='quantile', ax=disp.ax_,
@@ -109,11 +111,12 @@ class Plots:
             else:
                 disp = CalibrationDisplay.from_predictions(Y_val, Y_hat, strategy='quantile', name=model.Name)
 
+        plt.title("Baseline Models' Calibration Curves")
         return plt
 
     def __split_goal_percentiles(self, model):
         Y_val = model.Y_val
-        Y_hat = model.prob_goal()
+        Y_hat = model.goal_probability()
         Y_hat_goals = Y_hat[Y_val == 1]
         n_goals = Y_hat_goals.shape[0]
         percentiles = np.linspace(100, 0, 11)

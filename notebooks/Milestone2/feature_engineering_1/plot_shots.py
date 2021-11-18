@@ -1,8 +1,10 @@
+from os.path import dirname, abspath
+
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pandas import DataFrame
 
-from notebooks.Milestone2.feature_engineering_1.save_plot import save_plot
+from notebooks.Milestone2.common.save_plot import save_plot
 
 
 def plot_shots_per_distances_and_angles(dataset: DataFrame):
@@ -17,7 +19,7 @@ def __plot_shot_counts_binned_by_distance(dataset: DataFrame):
     plt.title(title)
     plt.ylabel('Shot Count')
     plt.xlabel('Shot Distance')
-    save_plot(title)
+    __save_plot(title)
     plt.show()
 
 
@@ -27,7 +29,7 @@ def __plot_shot_counts_binned_by_angle(dataset: DataFrame):
     plt.title(title)
     plt.ylabel('Shot Count')
     plt.xlabel('Shot Angle')
-    save_plot(title)
+    __save_plot(title)
     plt.show()
 
 
@@ -37,8 +39,9 @@ def __plot_shots_by_angle_and_distance(dataset: DataFrame):
     plt.suptitle(title)
     plt.xlabel('Shot Distance')
     plt.ylabel('Shot Angle')
-    save_plot(title)
+    __save_plot(title)
     plt.show()
 
 
-
+def __save_plot(title: str):
+    save_plot(title, dirname(abspath(__file__)))
