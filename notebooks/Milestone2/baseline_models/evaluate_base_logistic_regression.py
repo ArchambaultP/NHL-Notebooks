@@ -17,7 +17,7 @@ def evaluate_base_logistic_regression(data: DataFrame) -> Model:
         params={},
         X=X,
         Y=Y,
-        name="Model 1"
+        name="Base Logistic Regression"
     )
 
     log_reg.predictor.fit(log_reg.X_train, log_reg.Y_train)
@@ -27,7 +27,7 @@ def evaluate_base_logistic_regression(data: DataFrame) -> Model:
     print(f'Unique Predicted Values : {np.unique(predictions)}')
     __plot_predictions(log_reg.Y_val, log_reg.X_val.flatten(), predictions)
 
-    log_reg.create_experiment('Q3_Model1.pkl')
+    log_reg.create_experiment('Q3_Model1.pkl', [f'Features: {["Distance"]}'])
 
     return log_reg
 
