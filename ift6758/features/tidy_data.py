@@ -351,8 +351,8 @@ def tidy_allevents(json):
                                 if (app[1]<=120) and (app[0]=='db_minor'):
                                     away_pp.remove(app)
                                     break                 
-                        current['FriendPlayers'] = str(n_away_players)
-                        current['OpposingPlayers'] = str(n_home_players)
+                        current['FriendPlayers'] = n_away_players
+                        current['OpposingPlayers'] = n_home_players
 
                 except Exception as e:
                     current['TimeSincePP'] = 0
@@ -387,7 +387,8 @@ def tidy_allevents(json):
                         current['Last_coordinates.x'] = previous['Coordinates.x']
                         current['Last_coordinates.y'] = previous['Coordinates.y']
                         current['Time_last_event'] = int(current['TotalSeconds']-previous['TotalSeconds'])
-                        current['Distance_last_event'] = ( (current['Coordinates.x']-current['Last_coordinates.x'])**2 +                                                          (                                 current['Coordinates.y']-current['Last_coordinates.y'])**2 )**0.5
+                        current['Distance_last_event'] = ( (current['Coordinates.x']-current['Last_coordinates.x'])**2 +                                                          
+                                                         (current['Coordinates.y']-current['Last_coordinates.y'])**2 )**0.5
                         
                         if (current['Last_event_type'] == 'SHOT') and (current['team']==previous['team']):
                             current['Rebound'] = True
