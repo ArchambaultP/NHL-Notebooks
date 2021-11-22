@@ -4,7 +4,7 @@ from comet_ml import Experiment
 import numpy as np
 import os
 import pickle
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix
 from dotenv import load_dotenv
 
@@ -39,9 +39,14 @@ class Model:
     def grid_search_fit(self):
         clf = GridSearchCV(self.predictor,
                            param_grid=self.params,
-                           cv=10,
+                           cv=5,
                            n_jobs=-1)
 
+        clf.fit(self.X_train, self.Y_train)
+        self.predictor = clf.best_estimator_
+    
+    def random_search_fit(self):
+        clf = RandomizedSearchCV(self.predictor, self.params, cv=5,  n_jobs=-1)
         clf.fit(self.X_train, self.Y_train)
         self.predictor = clf.best_estimator_
 

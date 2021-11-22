@@ -22,6 +22,13 @@ class Plots:
         save_plot(f'{base_file_name} Reliability', directory)
         plt.show()
 
+    def show_plots(self):
+        self.make_roc_plot()
+        self.make_goal_rate_plot()
+        self.make_cumul_perc_goal_plot()
+        self.make_reliability_plot()
+        plt.show()
+
     def make_roc_plot(self):  # to plot Q3 figure a
         plt.figure()
         lw = 2

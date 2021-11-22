@@ -6,6 +6,7 @@ from ift6758.features import tidy_data as td
 from notebooks.Milestone2.baseline_models import evaluate_logistic_classifiers
 from notebooks.Milestone2.feature_engineering_1 import plot_shots_per_distances_and_angles, \
     plot_goal_rates_per_distances_and_angles, plot_goal_counts_binned_by_distance
+from notebooks.Milestone2.Q6_best_shot import train_models
 
 
 def main():
@@ -18,8 +19,10 @@ def main():
 
     # Baseline Models
     evaluate_logistic_classifiers(training_dataset)
-    return
 
+    # Various Model Attemps
+    train_models(train_models)
+    return
 
 def get_training_dataset() -> DataFrame:
     train_split_seasons = [2015, 2016, 2017, 2018]
@@ -35,3 +38,4 @@ def get_training_dataset() -> DataFrame:
 
 if __name__ == "__main__":
     main()
+    # train_models()
