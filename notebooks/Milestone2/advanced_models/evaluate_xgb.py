@@ -1,15 +1,16 @@
 from os.path import dirname, abspath
-
+import numpy as np
 from pandas import DataFrame
+import pandas as pd
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.model_selection import train_test_split
+import xgboost as xgb
+from xgboost import XGBClassifier
+import shap
 from notebooks.Milestone2.Model import Plots
-
-import importlib
-import notebooks
-importlib.reload(notebooks)
 from notebooks.Milestone2.Model_XGB import Model_XGB
+from notebooks.Milestone2.advanced_models import feature_selection_xgb as ft
 
 def evaluate_xgb(data: DataFrame):
 
@@ -21,92 +22,80 @@ def evaluate_xgb(data: DataFrame):
         params={},
         X=X1,
         Y=Y,
-        name="Teste XGB base features"
+        name="XGB base"
     )
     xg_base.fit()
+    xg_base.create_experiment('xgb_base.pkl', ['xgb_model','base' ])
 
-
-    X2 = data.loc[:, data.columns != 'isGoal']
-    xg_advanced = Model_XGB(
-        params={},
-        X=X2,
-        Y=Y,
-        name="Teste XGB advanced"
-    )
-    xg_advanced.fit()
-    
 
     X3 = data.loc[:, data.columns != 'isGoal']
     xg_advanced_grid = Model_XGB(
         params={},
         X=X3,
         Y=Y,
-        name="Teste XGB advanced - grid search"
+        name="XGB - grid search"
     )
     xg_advanced_grid.grid_search_fit()
+    xg_advanced_grid.create_experiment('xgb_model_grid.pkl', ['xgb_model','complete data', 'grid_search' ])
    
-    
-    X4 = data.loc[:, data.columns != 'isGoal']
-    xg_advanced_feat_sel = Model_XGB(
+
+    # feature selection get score
+    columns = ft.feat_sel_get_score(xg_advanced_grid.xg_class, 10)
+    print('get score columns selected: ')
+    print(columns)
+    X4 = data.loc[:, columns]
+    xg_advanced_feat_score = Model_XGB(
         params={},
-        X=X3,
+        X=X4,
         Y=Y,
-        name="Teste XGB advanced - feat sel"
+        name="XGB - feature selection"
     )
-    xg_advanced_feat_sel.grid_search_fit()
+    xg_advanced_feat_score.grid_search_fit()
     
-    xg_class = xg_advanced_grid.xg_class
-    feat_imp = xg_class.get_score(importance_type='gain')
-    feat_imp = dict(sorted(feat_imp.items(), key=lambda item: item[1], reverse=True))
-    df_columns = []
-    for i in range(12):
-        df_columns.append(list(feat_imp)[i])    
-    
-    X5 = X4.loc[:, df_columns[0:1]]
-    xg_advanced_feat_sel_5 = Model_XGB(
+    # feature selection shap
+    columns = ft.feat_sel_shap(XGBClassifier(), X3, Y, 10)
+    print('shap columns selected: ')
+    print(columns)
+    X5 = data.loc[:, columns]
+    xg_advanced_feat_shap = Model_XGB(
         params={},
         X=X5,
         Y=Y,
-        name="Teste XGB advanced - feat selection n=5"
+        name="Teste XGB advanced - feat sel"
     )
-    xg_advanced_feat_sel_5.grid_search_fit()
-    
-    X6 = X4.loc[:, df_columns[0:8]]
-    xg_advanced_feat_sel_8 = Model_XGB(
-        params={},
-        X=X6,
-        Y=Y,
-        name="Teste XGB advanced - feat selection n=8"
-    )
-    xg_advanced_feat_sel_8.grid_search_fit()
+    xg_advanced_feat_shap.grid_search_fit()
     
     
-    X7 = X4.loc[:, df_columns[0:10]]
-    xg_advanced_feat_sel_10 = Model_XGB(
-        params={},
-        X=X7,
-        Y=Y,
-        name="Teste XGB advanced - feat selection n=10"
-    )
-    xg_advanced_feat_sel_10.grid_search_fit()
+    if xg_advanced_feat_score.accuracy() > xg_advanced_feat_shap.accuracy():
+        xg_feat_sel = xg_advanced_feat_score
+        print('get score selected')
+    else:
+        xg_feat_sel = xg_advanced_feat_shap
+        print('shap selected')
+        
+    xg_feat_sel.create_experiment('xgb_model_feat_sel.pkl', ['xgb_model','complete data', 'grid_search', 'feat sel' ])
+    
+    print('base acc: '+str(xg_base.accuracy()))
+    print('grid acc: '+str(xg_advanced_grid.accuracy()))
+    print('feat acc: '+str(xg_feat_sel.accuracy()))
+
+    
+    plot = Plots([xg_base])
+    plot.save_and_show_plots('base xgb model', dirname(abspath(__file__)))
+    
+    plot = Plots([xg_advanced_grid])
+    plot.save_and_show_plots('xgb model - complete data & grid search', dirname(abspath(__file__)))
+    
+    plot = Plots([xg_feat_sel])
+    plot.save_and_show_plots('xgb model - feature selection', dirname(abspath(__file__)))
+    
+    plot = Plots([xg_base, xg_advanced_grid, xg_feat_sel])
+    plot.save_and_show_plots('xgb model - feature selection', dirname(abspath(__file__)))
     
 
-    print('base acc: '+str(xg_base.accuracy()))
-    print('add acc: '+str(xg_advanced.accuracy()))
-    print('grid acc: '+str(xg_advanced_grid.accuracy()))
-    print('grid + feat5 acc: '+str(xg_advanced_feat_sel_5.accuracy()))
-    print('grid + feat8 acc: '+str(xg_advanced_feat_sel_8.accuracy()))
-    print('grid + feat10 acc: '+str(xg_advanced_feat_sel_10.accuracy()))
     
     
-    plot = Plots([xg_base, xg_advanced,xg_advanced_grid, xg_advanced_feat_sel_5, xg_advanced_feat_sel_8, xg_advanced_feat_sel_10])
-    plot.save_and_show_plots('advanced models', dirname(abspath(__file__)))
-    print('plot')
     
-    #xg_base.create_experiment('advanced_models_baseData.pkl', ['advanced_model','base data' ])
-    #xg_advanced.create_experiment('advanced_models_advData.pkl', ['advanced_model','advanced data' ])
-    #xg_advanced_grid.create_experiment('advanced_models_advData_grid.pkl', ['advanced_model','advanced data', 'grid_search' ])
-    #xg_advanced_feat_sel_5.create_experiment('advanced_models_baseData.pkl', ['advanced_model','advanced data', 'grid_search', 'feat sel 5' ])
-    #xg_advanced_feat_sel_8.create_experiment('advanced_models_advData.pkl', ['advanced_model','advanced data', 'grid_search', 'feat sel 8' ])
-    #xg_advanced_feat_sel_10.create_experiment('advanced_models_advData_grid.pkl', ['advanced_model','advanced data', 'grid_search', 'feat sel 10' ])
+    
+
 

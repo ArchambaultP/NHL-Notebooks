@@ -72,7 +72,7 @@ class Model_XGB:
             for min_child_weight in range(1,3)
             for eta in [0.2, 0.3, 0.4, 0.5, 0.8, 1]
         ]
-        max_auc = 0
+        min_error = float("Inf")
         best_params = None
         for max_depth, min_child_weight,eta in gridsearch_params:
             params['max_depth'] = max_depth
@@ -86,16 +86,16 @@ class Model_XGB:
                 num_boost_round=num_boost_round,
                 seed=123,
                 nfold=5,
-                metrics={'auc'},
+                metrics={'error'},
                 early_stopping_rounds=10
             )
-            mean_auc = cv_results['test-auc-mean'].max()
-            boost_rounds = cv_results['test-auc-mean'].argmax()
-            if mean_auc > max_auc:
-                max_auc = mean_auc
+            mean_error = cv_results['test-error-mean'].min()
+            boost_rounds = cv_results['test-error-mean'].argmin()
+            if mean_error < min_error:
+                min_error = mean_error
                 best_params = params.copy()
                 best_b_round = boost_rounds 
-        #print('Best AUC: ' + str(max_auc) +' with params: ' + str(best_params) + ' and num_boost_round = ' + str(best_b_round))
+        #print('Best error: ' + str(max_error) +' with params: ' + str(best_params) + ' and num_boost_round = ' + str(best_b_round))
         self.params, self.num_boost_round = best_params, best_b_round 
         self.fit() 
     
