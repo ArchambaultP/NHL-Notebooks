@@ -5,10 +5,16 @@ class DataMaker :
     base_df = None
 
     @staticmethod
-    def load_all_data(season:int, type:str) :
+    def load_all_data(season:int, type:str , ref_seasons:int=[2019], ref_types:str=['R']) -> None :
         DataMaker.base_df = get_training_dataset([type], [season])
+        ref_columns = get_training_dataset(ref_types, ref_seasons).columns
+        print(len(ref_columns))
+        for loc, column in enumerate(ref_columns) :
+             if column not in DataMaker.base_df.columns :
+                 DataMaker.base_df.insert(loc=loc, column=column, value=[0] * DataMaker.base_df.shape[0])
         if season == 2019 :
             DataMaker.base_df.insert(loc=31, column='SHOOTOUT_COMPLETE', value=[0] * DataMaker.base_df.shape[0])
+        print('validation dataset columns : \n\n', DataMaker.base_df.columns)
 
     @staticmethod
     def get_baseline_data( model_name:str) -> pd.DataFrame :
