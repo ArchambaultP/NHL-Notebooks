@@ -13,7 +13,7 @@ load_dotenv()
 
 class Model:
 
-    def __init__(self, predictor: object = None, params: dict = None, X=None, Y=None, name=None, keep_model_file=False):
+    def __init__(self, predictor: object = None, params: dict = None, X=None, Y=None, name=None, keep_model_file=False, test_size=0.2):
         if predictor is None or params is None or X is None or Y is None:
             print('Invalid Model')
             return
@@ -22,10 +22,15 @@ class Model:
         self.params = params
         self.Name = name
         self.predictor = predictor
-        X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.2, stratify=Y)
+        X_train, X_val, Y_train, Y_val = [],[],[],[]
+        if test_size < 1.0 :
+            X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=test_size, stratify=Y)
+            if len(X_train.shape) <= 1:
+                X_train = X_train.to_numpy().reshape(-1, 1)
+        else :
+            X_val, Y_val = X, Y
 
-        if len(X_train.shape) <= 1:
-            X_train = X_train.to_numpy().reshape(-1, 1)
+        if len(X_val.shape) <= 1:
             X_val = X_val.to_numpy().reshape(-1, 1)
 
         self.X_train = X_train
@@ -51,7 +56,7 @@ class Model:
         self.predictor = clf.best_estimator_
 
     def accuracy(self):
-        Y_hat = self.predictor.predict(self.X_val)
+        Y_hat = self.goal_probability()
         n_errors = np.sum(Y_hat != self.Y_val)
         accuracy = 1 - (n_errors / Y_hat.shape[0])
         return accuracy
