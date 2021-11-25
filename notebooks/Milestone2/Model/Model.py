@@ -22,21 +22,16 @@ class Model:
         self.params = params
         self.Name = name
         self.predictor = predictor
-        X_train, X_val, Y_train, Y_val = [],[],[],[]
+        self.X_train, self.X_val, self.Y_train, self.Y_val = [],[],[],[]
         if test_size < 1.0 :
-            X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=test_size, stratify=Y)
-            if len(X_train.shape) <= 1:
-                X_train = X_train.to_numpy().reshape(-1, 1)
+            self.X_train, self.X_val, self.Y_train, self.Y_val = train_test_split(X, Y, test_size=test_size, stratify=Y)
+            if len(self.X_train.shape) <= 1:
+                self.X_train = self.X_train.to_numpy().reshape(-1, 1)
         else :
-            X_val, Y_val = X, Y
+            self.X_val, self.Y_val = X, Y
 
-        if len(X_val.shape) <= 1:
-            X_val = X_val.to_numpy().reshape(-1, 1)
-
-        self.X_train = X_train
-        self.X_val = X_val
-        self.Y_train = Y_train
-        self.Y_val = Y_val
+        if len(self.X_val.shape) <= 1:
+            self.X_val = self.X_val.to_numpy().reshape(-1, 1)
 
     def fit(self):
         self.predictor.fit(self.X_train, self.Y_train)
