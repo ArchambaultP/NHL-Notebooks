@@ -9,7 +9,6 @@ class Validator() :
     """Class to make the validation test for a given Model object and plot it if necessary"""
     class Model_XGB(Model) :
         def __init__(self, predictor: object = None, params: dict = None, X=None, Y=None, name=None, keep_model_file=False, test_size=0.2) :
-            print('test_size : ', test_size)
             Model.__init__(self, predictor=predictor, params=params, X=X, Y=Y, name=name, keep_model_file=keep_model_file, test_size=test_size)
             self.dtest = xgb.DMatrix(data=self.X_val, label=self.Y_val)
 
@@ -35,7 +34,6 @@ def validate(season:int, type:str) -> None :
     """ Method to start validation worflow with all registred models on comet. Work with Regular 2019 adding SHOOTOUT_COMPLETE column with zero values.
     \nInput : season -> season for test values || type -> game type
     \nOuput : None
-    \n!! WARNING : Final models work with too much features to work with Playoffs 2019 (some columns have to be added with 0 value in DataMaker) !!
     """
     # Load all data from (type,season)
     DataMaker.load_all_data(season, type)
