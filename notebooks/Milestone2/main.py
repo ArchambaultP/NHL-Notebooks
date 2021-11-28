@@ -8,7 +8,6 @@ from notebooks.Milestone2.feature_engineering_1 import plot_shots_per_distances_
     plot_goal_rates_per_distances_and_angles, plot_goal_counts_binned_by_distance
 from notebooks.Milestone2.Q6_best_shot import train_models
 
-
 def main():
     training_dataset = get_training_dataset()
 
@@ -21,7 +20,7 @@ def main():
     evaluate_logistic_classifiers(training_dataset)
 
     # Various Model Attemps
-    train_models(train_models)
+    train_models()
     return
 
 def get_training_dataset() -> DataFrame:
@@ -35,7 +34,6 @@ def get_training_dataset() -> DataFrame:
 
     return training_dataset.reset_index()
 
-
 if __name__ == "__main__":
     main()
-    # train_models()
+    #train_models()

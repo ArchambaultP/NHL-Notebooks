@@ -1,4 +1,5 @@
 
+from pickle import decode_long
 from ift6758.features import tidy_data as td
 import pandas as pd
 from ift6758.data import import_dataset
@@ -7,22 +8,43 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
-from sklearn.kernel_ridge import KernelRidge
+from sklearn.tree import DecisionTreeClassifier
 import numpy as np
+import pickle
 
 def train_models():
 
-    data = get_training_dataset("P")
+    data = get_training_dataset()
     Y = data['isGoal']
     X = data[data.columns.drop('isGoal')]
 
-    # train_kernel_ridge(X,Y)
-    nb = train_NB(X,Y)
-    rf = train_random_forest(X,Y)
+    #svm = train_svm(X,Y)
 
-    plot = Plots([nb,rf])
-    plot.show_plots()
-    # nb.create_experiment('Test_NB.pkl', ['Naive Bayes Q6'])
+    #svm.create_experiment('Final_SVM.pkl', ['Q6', 'Final'])
+
+    # dt = train_decision_tree(X,Y)
+    # # dt.create_experiment('Final_DT.pkl', ['Q6', 'Final'])
+
+    # nb = train_NB(X,Y)
+    # # nb.create_experiment('Final_NB.pkl', ['Q6', 'Final']) 
+
+    # rf = train_random_forest(X,Y)
+    # # rf.create_experiment('Final_RF.pkl', ['Q6', 'Final'])
+    # plot = Plots([svm,dt,nb,rf])
+    # plot.show_plots()
+
+    g = lambda x: pickle.load(open(x, 'rb'))
+    f = lambda x, y: Model(predictor=g(x),params=[1], X=X,Y=Y,name=y)
+
+    #svm = f("Final_SVM.pkl", "SVM")
+    #nb = f("Final_NB.pkl", "Naive Bayes")
+    #dt = f("Final_DT.pkl", "Decision Tree")
+    #rf = f("Final_RF.pkl", "Random Forest")
+
+    #breakpoint()
+    #plot = Plots([svm,dt,nb,rf])
+    #plot.show_plots()
+
     return
 
 def train_random_forest(X, Y):
@@ -41,9 +63,9 @@ def train_random_forest(X, Y):
 
 def train_svm(X,Y):
     print("Training SVM")
-    svm_params = {'max_iter':[5000], "kernel":["linear", "poly", "rbf", "sigmoid"]}
+    svm_params = {'C':[0.01, 0.1, 0.5, 1, 2],'max_iter':[5000], "kernel":["linear", "poly", "rbf", "sigmoid"]}
     clf_svm = Model(
-        predictor=SVC(),
+        predictor=SVC(probability=True),
         params=svm_params,
         X=X,
         Y=Y,
@@ -67,26 +89,24 @@ def train_NB(X,Y):
     return clf_NB
 
 
-def train_kernel_ridge(X,Y):
-    print("Training Kernel Ridge")
-    kr_params = {'alpha':[0, 0.001, 0.01, 0.1, 0.5, 1, 2], "kernel":['chi2', 'linear', 'poly', 'rbf', 'laplacian', 'sigmpoid']}
+def train_decision_tree(X,Y):
+    print("Training Decision Tree")
+    params = dict(criterion=['gini', 'entropy'], max_depth=[2,8,None], min_samples_split=[2,3,4,5], max_features=['sqrt', 'log2', None])
     
-    clf_kr = Model(
-        predictor=KernelRidge(),
-        params=kr_params,
+    clf = Model(
+        predictor=DecisionTreeClassifier(),
+        params=params,
         X=X,
         Y=Y,
-        name="Kernel Ridge Classifier"
+        name="Decision Tree Classifier"
     )
-    clf_kr.random_search_fit()
-    print(f"Kernel Ridge Accuracy : {clf_kr.accuracy()}")
-    return clf_kr
+    clf.random_search_fit()
+    print(f"Decision Tree Accuracy : {clf.accuracy()}")
+    return clf
 
 def get_training_dataset(gt : list  = None) -> pd.DataFrame:
-    train_split_seasons = [2015]#[2015, 2016, 2017, 2018]
+    train_split_seasons = [2015, 2016, 2017, 2018]
     training_dataset = pd.DataFrame()
-    subset = pd.DataFrame()
-
     if gt is None:
         gt = ['R', 'P']
 
