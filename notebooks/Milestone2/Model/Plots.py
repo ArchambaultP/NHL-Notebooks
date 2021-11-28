@@ -118,6 +118,7 @@ class Plots:
             else:
                 disp = CalibrationDisplay.from_predictions(Y_val, Y_hat, strategy='quantile', name=model.Name)
 
+        plt.legend(loc="upper left")
         plt.title("Baseline Models' Calibration Curves")
         return plt
 
