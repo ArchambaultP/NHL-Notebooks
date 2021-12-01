@@ -51,7 +51,7 @@ class Model:
         self.predictor = clf.best_estimator_
 
     def accuracy(self):
-        Y_hat = self.goal_probability()
+        Y_hat = self.predictor.predict(self.X_val)
         n_errors = np.sum(Y_hat != self.Y_val)
         accuracy = 1 - (n_errors / Y_hat.shape[0])
         return accuracy
