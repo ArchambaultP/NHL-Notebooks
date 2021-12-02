@@ -9,21 +9,25 @@ gunicorn can be installed via:
 
 """
 import os
+from os.path import dirname, abspath
 from pathlib import Path
 import logging
+from typing import Optional
+
 from flask import Flask, jsonify, request, abort
 import sklearn
 import pandas as pd
 import joblib
+from waitress import serve
 
-
-import ift6758
-
+from milestone_3.ift6758.ift6758.client.serving_client import ServingClient
 
 LOG_FILE = os.environ.get("FLASK_LOG", "flask.log")
 
 
 app = Flask(__name__)
+
+client_service: Optional[ServingClient] = None
 
 
 @app.before_first_request
@@ -32,11 +36,17 @@ def before_first_request():
     Hook to handle any initialization before the first request (e.g. load model,
     setup logging handler, etc.)
     """
-    # TODO: setup basic logging configuration
-    logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
+    file_dir = dirname(abspath(__file__))
+    log_file_path = Path(file_dir) / LOG_FILE
+
+    logging.basicConfig(format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                        handlers=[logging.FileHandler(log_file_path), logging.StreamHandler()],
+                        level=logging.INFO,
+                        force=True)
 
     # TODO: any other initialization before the first request (e.g. load default model)
-    pass
+    global client_service
+    client_service = ServingClient(log_file_path=log_file_path)
 
 
 @app.route("/logs", methods=["GET"])
@@ -44,10 +54,10 @@ def logs():
     """Reads data from the log file and returns them as the response"""
     
     # TODO: read the log file specified and return the data
-    raise NotImplementedError("TODO: implement this endpoint")
+    if client_service is None:
+        raise RuntimeError('Client Service is not yet instantiated!')
 
-    response = None
-    return jsonify(response)  # response must be json serializable!
+    return jsonify(client_service.logs())  # response must be json serializable!
 
 
 @app.route("/download_registry_model", methods=["POST"])
@@ -109,3 +119,10 @@ def predict():
 
     app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
+
+# logger = logging.getLogger(__name__)
+# logger.info('dddd')
+
+
+if __name__ == '__main__':
+    serve(app, listen='*:8080')
