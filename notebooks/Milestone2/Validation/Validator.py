@@ -39,7 +39,6 @@ def validate(season:int, type:str) -> None :
     """ Method to start validation worflow with all registred models on comet. Work with Regular 2019 adding SHOOTOUT_COMPLETE column with zero values.!! 
     \nInput : season -> season for test values || type -> fame type
     \nOuput : None
-    \n!! WARNING : Final models work with to much features to work with Playoffs 2019 (some columns have to be added with 0 value in DataMaker) !!
     """
     DataMaker.load_all_data(season, type) # Load all data from (type,season)
 
