@@ -1,11 +1,14 @@
-import json
 import os
+import pickle
+import traceback
+from os.path import dirname, abspath
 from pathlib import Path
+from typing import Union, Any
 
-import requests
 import pandas as pd
 import logging
 
+from comet_ml import API
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,8 @@ class ServingClient:
 
         # any other potential initialization
         self.log_file_path = log_file_path
+        self.comet_api = API(api_key=os.getenv('COMET_ML_KEY'))
+        self.predictor: Any = None
 
     def predict(self, X: pd.DataFrame) -> pd.DataFrame:
         """
@@ -31,8 +36,9 @@ class ServingClient:
         Args:
             X (Dataframe): Input dataframe to submit to the prediction service.
         """
-
-        raise NotImplementedError("TODO: implement this function")
+        if self.predictor is None:
+            raise RuntimeError('No model loaded. Call /download_registry_model first!')
+        return pd.DataFrame(self.predictor.predict_proba(X), columns=['No Goal', 'Goal'])
 
     def logs(self) -> dict:
         """Get server logs"""
@@ -55,5 +61,48 @@ class ServingClient:
             model (str): The model in the Comet ML registry to download
             version (str): The model version to download
         """
+        err_data = {}
+        models_folder_path = self.__get_models_folder_path()
+        try:
+            self.comet_api.download_registry_model(workspace, model, version, output_path=str(models_folder_path))
+            self.load_predictor(workspace, model, version)
+            success = True
+            logger.info(f'Loaded model {model} V{version} from workspace: {workspace}.')
+        except Exception:
+            success = False
+            error_msg = 'Failed to download and load model.'
+            logger.exception(error_msg)
+            err_data['error'] = traceback.format_exc()
 
-        raise NotImplementedError("TODO: implement this function")
+        return {
+            'success': success
+                       ** err_data
+        }
+
+    def is_model_downloaded(self, workspace: str, model: str, version: str) -> bool:
+        return self.__get_model_file_path(workspace, model, version).exists()
+
+    def __get_model_file_path(self, workspace: str, model: str, version: str) -> Path:
+        return self.__get_models_folder_path() / self.__get_model_file_name(workspace, model, version)
+
+    @staticmethod
+    def __get_models_folder_path() -> Path:
+        return Path(dirname(dirname(abspath(__file__)))) / 'data'
+
+    def __get_model_file_name(self, workspace: str, model: str, version: str) -> str:
+        registry_details = self.comet_api.get_registry_model_details(
+            workspace,
+            model,
+            version=version
+        )
+        if registry_details is not None:
+            return registry_details["assets"][0]['fileName']
+        else:
+            raise RuntimeError(f'Model not found in comet ml registry. '
+                               f'Workspace {workspace}, model: {model}, version {version}.')
+
+    def load_predictor(self, workspace: str, model: str, version: str):
+        self.__load_predictor(self.__get_model_file_path(workspace, model, version))
+
+    def __load_predictor(self, file_path: Union[Path, str]):
+        self.predictor = pickle.load(open(file_path, 'rb'))

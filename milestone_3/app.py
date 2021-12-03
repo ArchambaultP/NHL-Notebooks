@@ -8,16 +8,16 @@ gunicorn can be installed via:
     $ pip install gunicorn
 
 """
+import json
+import logging
 import os
+import traceback
 from os.path import dirname, abspath
 from pathlib import Path
-import logging
 from typing import Optional
 
-from flask import Flask, jsonify, request, abort
-import sklearn
 import pandas as pd
-import joblib
+from flask import Flask, jsonify, request, abort
 from waitress import serve
 
 from milestone_3.ift6758.ift6758.client.serving_client import ServingClient
@@ -52,8 +52,7 @@ def before_first_request():
 @app.route("/logs", methods=["GET"])
 def logs():
     """Reads data from the log file and returns them as the response"""
-    
-    # TODO: read the log file specified and return the data
+
     if client_service is None:
         raise RuntimeError('Client Service is not yet instantiated!')
 
@@ -78,24 +77,24 @@ def download_registry_model():
     
     """
     # Get POST json data
-    json = request.get_json()
-    app.logger.info(json)
+    params = request.get_json()
+    app.logger.info(params)
+    workspace, model, version = params['workspace'], params['model'], params['version']
 
-    # TODO: check to see if the model you are querying for is already downloaded
+    try:
+        is_model_downloaded = client_service.is_model_downloaded(workspace, model, version)
+    except RuntimeError:
+        app.logger.exception('')
+        return abort(404, traceback.format_exc())
 
-    # TODO: if yes, load that model and write to the log about the model change.  
-    # eg: app.logger.info(<LOG STRING>)
-    
-    # TODO: if no, try downloading the model: if it succeeds, load that model and write to the log
-    # about the model change. If it fails, write to the log about the failure and keep the 
-    # currently loaded model
-
-    # Tip: you can implement a "CometMLClient" similar to your App client to abstract all of this
-    # logic and querying of the CometML servers away to keep it clean here
-
-    raise NotImplementedError("TODO: implement this endpoint")
-
-    response = None
+    if is_model_downloaded:
+        client_service.load_predictor(workspace, model, version)
+        app.logger.info('Model is already downloaded. Loaded model from local file.')
+        response = {
+            'success': True
+        }
+    else:
+        response = client_service.download_registry_model(workspace, model, version)
 
     app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
@@ -109,19 +108,20 @@ def predict():
     Returns predictions
     """
     # Get POST json data
-    json = request.get_json()
-    app.logger.info(json)
+    params = request.get_json()
+    app.logger.info(params)
 
-    # TODO:
-    raise NotImplementedError("TODO: implement this enpdoint")
-    
-    response = None
+    X = pd.read_json(str(params), orient='values')
+    try:
+        predictions = client_service.predict(X)
+    except RuntimeError:
+        app.logger.exception('')
+        return abort(400, traceback.format_exc())
+
+    response = json.loads(predictions.to_json(orient='columns'))
 
     app.logger.info(response)
     return jsonify(response)  # response must be json serializable!
-
-# logger = logging.getLogger(__name__)
-# logger.info('dddd')
 
 
 if __name__ == '__main__':
