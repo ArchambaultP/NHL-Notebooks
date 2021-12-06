@@ -6,13 +6,11 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile.serving
-#      args:
-#        ARG: <ARG>
-#    image: ift6758/serving:<TAG>
-#    ports:
-#      - <SERVING_PORT>:<SERVING_PORT>
-#    environment:
-#      DOCKER_ENV_VAR = ${LOCAL_ENV_VAR}
+    image: ift6758/serving:serving-client
+    ports:
+        - "8080:8080"
+    environment:
+        COMET_ML_KEY: ${COMET_ML_KEY}
 ###### Uncomment below when you're ready to add the final notebook container to your docker compose
 ##  jupyter:
 ##    build:

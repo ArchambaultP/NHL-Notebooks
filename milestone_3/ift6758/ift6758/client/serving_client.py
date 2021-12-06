@@ -9,6 +9,9 @@ import pandas as pd
 import logging
 
 from comet_ml import API
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +78,8 @@ class ServingClient:
             err_data['error'] = traceback.format_exc()
 
         return {
-            'success': success
-                       ** err_data
+            'success': success,
+                **err_data
         }
 
     def is_model_downloaded(self, workspace: str, model: str, version: str) -> bool:

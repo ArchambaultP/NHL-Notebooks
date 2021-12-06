@@ -58,6 +58,9 @@ def logs():
 
     return jsonify(client_service.logs())  # response must be json serializable!
 
+@app.route("/test_key", methods=["GET"])
+def test_key():
+    return os.getenv('COMET_ML_KEY')
 
 @app.route("/download_registry_model", methods=["POST"])
 def download_registry_model():
@@ -79,6 +82,7 @@ def download_registry_model():
     # Get POST json data
     params = request.get_json()
     app.logger.info(params)
+
     workspace, model, version = params['workspace'], params['model'], params['version']
 
     try:

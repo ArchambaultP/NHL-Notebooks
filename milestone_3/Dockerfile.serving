@@ -42,6 +42,18 @@ WORKDIR /code
 #
 #       CMD <SHELL COMMAND>
 
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+ARG COMET_ML_KEY
+ENV COMET_ML_KEY = COMET_ML_KEY
+EXPOSE 8080
+COPY ./app.py .
+RUN mkdir milestone_3/
+RUN mkdir milestone_3/ift6758
+COPY ift6758/ milestone_3/ift6758/.
+CMD ["python","app.py"]
 
 
 # TODO: add code, optionally a default model if you want 
