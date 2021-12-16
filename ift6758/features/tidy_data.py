@@ -415,7 +415,7 @@ def tidy_allevents(json):
                 
                 
     data = pd.DataFrame(extracted_data)
-    data = data[['GamePk','EventTypeId','DateTime','TotalSeconds','Last_event_type','Last_coordinates.x',
+    data = data[['GamePk','team','EventTypeId','DateTime','TotalSeconds','Last_event_type','Last_coordinates.x',
                                       'Last_coordinates.y','Time_last_event','Distance_last_event','Rebound','Speed', 'TimeSincePP', 'FriendPlayers', 'OpposingPlayers' ]]
     
     return data
