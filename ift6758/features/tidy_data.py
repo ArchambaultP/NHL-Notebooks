@@ -208,33 +208,38 @@ def get_playbyplay_data(json) :
 
 def tidy_playbyplay_data(json):
 
-	df = pd.DataFrame(json)
-
-	right_cond = df['rinkSide'] == 'right'
-	left_cond = df['rinkSide'] == 'left'
-
-	df_right_side = df[right_cond].copy()
-	df_right_side['Coordinates.y'] = np.abs(df_right_side['Coordinates.y'] )
-
-	df_left_side = df[left_cond].copy()
-	df_left_side['Coordinates.y'] = np.abs(df_left_side['Coordinates.y'] )
-
-	df_right_side['angle'] = np.rad2deg(np.arctan(df_right_side['Coordinates.y'] / (df['Coordinates.x'] + 89)))
-	df_left_side['angle'] = np.rad2deg(np.arctan(df_left_side['Coordinates.y'] / -(df['Coordinates.x'] - 89)))
-
-	df_right_side['goalDist'] = np.linalg.norm(df_right_side[['Coordinates.x', 'Coordinates.y']].to_numpy() + [89,0], 2, axis=1)
-	df_left_side['goalDist'] = np.linalg.norm(df_left_side[['Coordinates.x', 'Coordinates.y']].to_numpy() - [89, 0], 2, axis=1)
+    df = pd.DataFrame(json)
+    
+    try:
+        right_cond = df['rinkSide'] == 'right'
+        left_cond = df['rinkSide'] == 'left'
+    except Exception as e:
+        right_cond = 0
+        left_cond = 0
 
 
-	for new_col in ['angle', 'goalDist']:
-		df.loc[right_cond, new_col] = df_right_side[new_col]
-		df.loc[left_cond, new_col] = df_left_side[new_col]
+    df_right_side = df[right_cond].copy()
+    df_right_side['Coordinates.y'] = np.abs(df_right_side['Coordinates.y'] )
 
-	df['isGoal'] = (df['EventTypeId'] == 'GOAL') * 1
-	df['EmptyNet'] = (df['EmptyNet']) * 1
-	df.loc[df['Coordinates.y'] < 0, 'angle'] *= -1
+    df_left_side = df[left_cond].copy()
+    df_left_side['Coordinates.y'] = np.abs(df_left_side['Coordinates.y'] )
 
-	return df[['Coordinates.x', 'Coordinates.y', 'angle', 'goalDist', 'isGoal', 'EmptyNet']]
+    df_right_side['angle'] = np.rad2deg(np.arctan(df_right_side['Coordinates.y'] / (df['Coordinates.x'] + 89)))
+    df_left_side['angle'] = np.rad2deg(np.arctan(df_left_side['Coordinates.y'] / -(df['Coordinates.x'] - 89)))
+
+    df_right_side['goalDist'] = np.linalg.norm(df_right_side[['Coordinates.x', 'Coordinates.y']].to_numpy() + [89,0], 2, axis=1)
+    df_left_side['goalDist'] = np.linalg.norm(df_left_side[['Coordinates.x', 'Coordinates.y']].to_numpy() - [89, 0], 2, axis=1)
+
+
+    for new_col in ['angle', 'goalDist']:
+        df.loc[right_cond, new_col] = df_right_side[new_col]
+        df.loc[left_cond, new_col] = df_left_side[new_col]
+
+    df['isGoal'] = (df['EventTypeId'] == 'GOAL') * 1
+    df['EmptyNet'] = (df['EmptyNet']) * 1
+    df.loc[df['Coordinates.y'] < 0, 'angle'] *= -1
+
+    return df[['Coordinates.x', 'Coordinates.y', 'angle', 'goalDist', 'isGoal', 'EmptyNet']]
 
 def tidy_allevents(json):
         

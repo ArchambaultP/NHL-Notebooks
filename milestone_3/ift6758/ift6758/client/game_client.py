@@ -2,6 +2,7 @@ import requests
 import re
 from ift6758.features import tidy_data as td
 import pandas as pd
+import numpy as np
 import copy
 
 GAME_DATA = None
@@ -19,15 +20,22 @@ def ping_game(game_id:int, event_idx:int, *args):
         GAME_ID = game_id
         LAST_IDX = 0
     
+    GAME_EVENTS = GAME_DATA['liveData']['plays']['allPlays'] #added
+    
     events = list(filter(lambda e: e['about']['eventIdx'] == event_idx,GAME_EVENTS))
     out = []
     past_out = []
     new_idx = -1
     game_data_past = copy.deepcopy(GAME_DATA)
     game_data_new = copy.deepcopy(GAME_DATA)
-
-
-    if len(events) > 0:
+    
+    events_start = list(filter(lambda e: e['result']['event'] == 'Period Start',GAME_EVENTS))
+    if len(events_start):
+        game_start = True
+    else:
+        game_start = False
+    
+    if (len(events) > 0) and (game_start==True):
         event = events[0]
         new_idx = event['about']['eventIdx']
 
@@ -45,15 +53,19 @@ def ping_game(game_id:int, event_idx:int, *args):
 
         LAST_IDX = gd_new[-1]['about']['eventIdx']
 
-        past_pbp_data = td.get_playbyplay_data([game_data_past])
-        past_pbp_tidied = td.tidy_playbyplay_data(past_pbp_data)
-        past_pbp_tidied2 = td.tidy2_playbyplay_data([game_data_past], pd.concat([pd.DataFrame(past_pbp_data),past_pbp_tidied], axis=1))
+        #past_pbp_data = td.get_playbyplay_data([game_data_past])
+        #past_pbp_tidied = td.tidy_playbyplay_data(past_pbp_data)
+        #past_pbp_tidied2 = td.tidy2_playbyplay_data([game_data_past], pd.concat([pd.DataFrame(past_pbp_data),past_pbp_tidied], axis=1))
         
         new_pbp_data = td.get_playbyplay_data([game_data_new])
         new_pbp_tidied = td.tidy_playbyplay_data(new_pbp_data)
         new_pbp_tidied2 = td.tidy2_playbyplay_data([game_data_new], pd.concat([pd.DataFrame(new_pbp_data),new_pbp_tidied], axis=1))
-
-    return new_pbp_tidied2, LAST_IDX, past_pbp_tidied2
+    
+    else:
+        new_pbp_tidied2 = None
+        LAST_IDX = None
+    
+    return new_pbp_tidied2, LAST_IDX#, past_pbp_tidied2
 
 
     
@@ -67,9 +79,10 @@ def fetch_live_game_data(game_id:str):
     game_id: game ID to fetch
     """
     
-    print(GAME_URL)
+    #print(GAME_URL)
     req_url = re.sub(r'ID', f'{game_id}', GAME_URL)
     resp = requests.get(req_url)
     return resp.json()
 
-unseen_events, new_idx, past_events = ping_game(2021020329, 8)
+#unseen_events, new_idx, past_events = ping_game(2021020329, 8)
+#unseen_events, new_idx = ping_game(2021020329, 8)
