@@ -3,8 +3,7 @@ import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import LabelBinarizer
 import xgboost as xgb
-#from xgboost import XGBClassifier
-#from xgboost import cv
+
 
 def get_columns():
     
@@ -22,8 +21,10 @@ def get_columns():
 def process_dataframe(df):
 
     df.reset_index(drop=True, inplace=True)
-    df = df.drop(columns=['GamePk'])
-
+    try:
+        df = df.drop(columns=['GamePk'])
+    except Exception as e:
+        df = df
     columns = get_columns()
 
     df["Last_event_type"] = df["Last_event_type"].astype(str)
