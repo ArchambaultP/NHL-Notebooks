@@ -11,18 +11,18 @@ services:
         - "8080:8080"
     environment:
         COMET_ML_KEY: ${COMET_ML_KEY}
-###### Uncomment below when you're ready to add the final notebook container to your docker compose
-##  jupyter:
-##    build:
-##      context: ./
-##      dockerfile: ./Dockerfile.jupyter
-##      args:
-##        ARG: <ARG>
-##    image: ift6758/jupyter:<TAG>
-##    ports:
-##      - <JUPYTER_PORT>:<JUPYTER_PORT>
-##    environment:
-##      OTHER_DOCKER_ENV_VAR = ${OTHER_LOCAL_ENV_VAR}
+  jupyter:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.jupyter
+      args:
+        JUPYTER_PORT: 8888
+    environment:
+        JUPYTER_PORT: 8888
+        COMET_ML_KEY: ${COMET_ML_KEY}
+    image: ift6758/jupyter:game-dashboard
+    ports:
+      - "8888:8888"
       
 
      

@@ -41,17 +41,19 @@ WORKDIR /code
 # https://docs.docker.com/engine/reference/builder/#cmd
 #
 #       CMD <SHELL COMMAND>
+#
 
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+ARG COMET_ML_KEY
+ENV COMET_ML_KEY = COMET_ML_KEY
+ARG JUPYTER_PORT
+COPY ./Dashboard.ipynb .
+RUN mkdir milestone_3/
+RUN mkdir milestone_3/ift6758
+EXPOSE ${JUPYTER_PORT}
+COPY ift6758/ milestone_3/ift6758/.
+COPY ift6758/ift6758 ift6758/.
+COPY features_dashboard/ milestone_3/features_dashboard/.
+CMD jupyter notebook --port=${JUPYTER_PORT} --no-browser --ip=0.0.0.0 --allow-root
 
-
-# TODO: add code, optionally a default model if you want 
-
-
-# TODO: install libs
-
-
-# TODO: expose ports (or do this in docker-compose)
-
-
-# TODO: specify default command - this is not required because you can always specify the command
-# either with the docker run command or in the docker-compose file
