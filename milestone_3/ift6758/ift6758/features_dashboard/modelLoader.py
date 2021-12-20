@@ -12,7 +12,7 @@ class ModelLoader() :
     class Model_Enum :
         MODEL = 0
         NAME = 1
-    def __init__(self, folder_name='ift6758/data/models', username="charlescol") :
+    def __init__(self, folder_name='ift6758/data', username="charlescol") :
         self.folder_name = folder_name
         self.username = username
         
