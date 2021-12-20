@@ -12,7 +12,7 @@ class ModelLoader() :
     class Model_Enum :
         MODEL = 0
         NAME = 1
-    def __init__(self, folder_name='Final_Models', username="charlescol") :
+    def __init__(self, folder_name='ift6758/data/models', username="charlescol") :
         self.folder_name = folder_name
         self.username = username
         
@@ -25,13 +25,14 @@ class ModelLoader() :
         'xgb-feature-selection' : 'xgb_model_feat_sel.pkl'}
    
     def get_model_from_api(self, name, version='1.0.0') -> None :
-        downloaded_files = os.listdir()#('.\\' + self.folder_name)
+        downloaded_files = os.listdir(self.folder_name)
+        
         filename = api.get_registry_model_details(self.username, name, version=version)["assets"][0]['fileName']
         if filename not in downloaded_files :
-            api.download_registry_model(self.username, name, version, '.\\' + self.folder_name)
+            api.download_registry_model(self.username, name, version, self.folder_name)
         model_filename = filename
         extension = '.pkl'
-    #def get_model(self, model_filename, extension:str = '.pkl') -> object :
-        model_pkl = open(f'{self.folder_name}\\{model_filename}', 'rb')       
-        model_pkl = pickle.load(model_pkl)#, model_filename[:-len(extension)]
+        model_pkl = open(f'{self.folder_name}/{model_filename}', 'rb')       
+        model_pkl = pickle.load(model_pkl)
+
         return model_pkl
