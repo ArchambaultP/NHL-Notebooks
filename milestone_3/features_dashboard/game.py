@@ -9,7 +9,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import LabelBinarizer
 import importlib
 
-from milestone_3.ift6758.ift6758.client import game_client
+from ift6758.client import game_client
 
 class Game():
     
