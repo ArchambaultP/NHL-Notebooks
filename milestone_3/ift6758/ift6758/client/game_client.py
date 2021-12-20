@@ -1,7 +1,6 @@
 import requests
 import re
-#from ift6758.features import tidy_data as td
-from milestone_3.features_dashboard import tidy_data as td
+from ift6758.features import tidy_data as td
 import pandas as pd
 import numpy as np
 import copy
