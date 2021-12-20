@@ -8,7 +8,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import LabelBinarizer
 import pandas as pd
 import numpy as np
-from features_dashboard import modelLoader, game, process_data
+from ift6758.features_dashboard import modelLoader, game, process_data
 from ift6758.client import game_client
 
 

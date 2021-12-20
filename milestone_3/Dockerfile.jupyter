@@ -54,6 +54,5 @@ RUN mkdir milestone_3/ift6758
 EXPOSE ${JUPYTER_PORT}
 COPY ift6758/ milestone_3/ift6758/.
 COPY ift6758/ift6758 ift6758/.
-COPY features_dashboard/ milestone_3/features_dashboard/.
 CMD jupyter notebook --port=${JUPYTER_PORT} --no-browser --ip=0.0.0.0 --allow-root
 
